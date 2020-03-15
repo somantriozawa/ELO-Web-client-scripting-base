@@ -1,0 +1,275 @@
+/**
+Pefindo Button to create folder with workflow on certain folder
+version 19022020
+**/
+
+/**
+declare namespace, required on all web client scripts and
+is always present on the first line or first code occurence
+(except comments, of course)
+**/
+api.namespace('custom.buttonPefindoWeb');
+
+//create the main function
+/**
+to call the namespace, use the format: <namespace_name>.<function_or_variable_name>
+you need this to create functions or global variables
+example: custom.buttonPefindoWeb.CreateReminderFunction
+**/
+//global variable for objId
+
+//function button 1
+custom.buttonPefindoWeb.CreateFolderWorkflowSuratKeluarFunction = function(state){
+  var objectId = 0; //objid sord, tidak perlu diganti
+  //mask id of the created folder (kwf type), to be changed depending on keywording id
+  var maskId = 26; //id kwf
+  //set parentId to certain folder, to use it for any selected folder, change it to: state.getSord().getId()
+  var parentId = 1261; //id Folder
+  //create empty folder (sord)
+  var emptySord = new elo.model.Sord({
+    data: {
+      parentId: parentId,
+      mask: maskId
+    }
+  });
+  console.log("Parent id terpilih: " + parentId); //logging purposes
+
+  //get current date
+  var today = new Date();
+  var day = String(today.getDate()).padStart(2, '0');
+  var month = String(today.getMonth() + 1).padStart(2, '0');
+  var year = today.getFullYear();
+
+  today = day + month + year;
+  //fill some sord fields
+  emptySord.create(function(createdSord){
+    createdSord.setLineByGroup('Short name', 'Surat keluar - ' + today); //set short name
+    createdSord.setName('Surat keluar - ' + today); //set name (ideally same as short name)
+
+    //check in Sord
+    createdSord.checkin(function(id){
+      //api.Webclient.gotoEntry(id);
+      objectId = id;
+      console.log('objectId set: ' + objectId); //logging purpsoes
+      console.log("ObjId utk sord yang baru dibuat: " + id); //logging purpsoes
+      api.Webclient.changeRegion('TASK');
+      api.Webclient.refreshView(true);
+
+    }, function(){
+      api.Webclient.displayMessage('Problem', 'Cannot create Sord, Try again.'); //failed callback
+    });
+  });
+
+  //create workflow based on template
+  var workflowId = 1; //id Template Workflow
+  var workflowName = 'Surat keluar - ' + today;
+
+  var emptyWorkflow = new elo.model.Task({
+    data: {
+      objId: objectId,
+      flowId: workflowId,
+      name: workflowName
+    }
+  });
+
+  //start workflow
+  emptyWorkflow.startWorkflow(function(){
+    //search the task and select
+    var ixConn = api.Webclient.getIXConnection();
+    //get the specific task
+    var taskInfo = new de.elo.ix.client.FindTasksInfo();
+    taskInfo.objId = objectId;
+    taskInfo.inclWorkflows = true;
+    taskInfo.lowestPriority = 2;
+    taskInfo.highestPriority = 0;
+    taskInfo.inclGroup = true;
+    taskInfo.inclDeputy = true;
+    ixConn.ix().findFirstTasks(taskInfo, new de.elo.ix.client.AsyncCallback(function(res){
+      ixConn.ix().findClose(res.searchId, new de.elo.ix.client.AsyncCallback(function(){
+      }, function(){
+      }));
+      if(res && res.tasks && res.tasks.length > 0){
+        //stop search
+        var task = res.tasks[0];
+        if(task){
+          //make goto object
+          var taskObject = {};
+          if(task.wfNode){
+            taskObject.nodeId = task.wfNode.nodeId;
+            taskObject.flowId = task.wfNode.flowId;
+          }
+          //trigger goto
+          api.Webclient.gotoTask(taskObject);
+        }
+      }
+    }, function(){api.Webclient.displayMessage('gagal','gagal');
+    })); //failed callback
+
+    //logging purposes
+    console.log('ObjId: ' + objectId
+              + '\nWorkflow Name: ' + workflowName
+              + '\nWorkflow Template ID: ' + workflowId);
+  });
+
+  //display message box
+  var title = 'Create Folder with Workflow Surat Keluar'; //top title
+  var text = 'Create Folder and Workflow Surat Keluar Succeded! Please reload the repository or browser if needed.'; //body text
+  api.Webclient.displayMessage(title, text);
+};
+
+//function button 2
+custom.buttonPefindoWeb.CreateFolderWorkflowSuratMasukFunction = function(state2){
+  //workaround test
+  var objId2 = 0;
+  //mask id of the created folder (kwf type), to be changed depending on keywording id
+  var maskId2 = 30; //id kwf
+  //set parentId to certain folder, to use it for any selected folder, change it to: state.getSord().getId()
+  var parentId2 = 2211; //id Folder
+  //create empty folder (sord)
+  var emptySord2 = new elo.model.Sord({
+    data: {
+      parentId: parentId2,
+      mask: maskId2
+    }
+  });
+  console.log("Parent id terpilih: " + parentId2); //logging purposes
+
+  //get current date
+  var today2 = new Date();
+  var day2 = String(today2.getDate()).padStart(2, '0');
+  var month2 = String(today2.getMonth() + 1).padStart(2, '0');
+  var year2 = today2.getFullYear();
+
+  today2 = day2 + month2 + year2;
+  //fill some sord fields
+  emptySord2.create(function(createdSord2){
+    createdSord2.setLineByGroup('Short name', 'Surat masuk - ' + today2); //set short name
+    createdSord2.setName('Surat masuk - ' + today2); //set name (ideally same as short name)
+
+    //check in Sord
+    createdSord2.checkin(function(id2){
+      //api.Webclient.gotoEntry(id2);
+      objectId2 = id2;
+      console.log('objectId set: ' + objectId2); //logging purpsoes
+      console.log("ObjId utk sord yang baru dibuat: " + id2); //logging purpsoes
+      api.Webclient.changeRegion('TASK');
+      api.Webclient.refreshView(true);
+
+    }, function(){
+      api.Webclient.displayMessage('Problem', 'Cannot create Sord, Try again.'); //failed callback
+    });
+  });
+
+  //create workflow based on template
+  var workflowId2 = 2; //id Template Workflow
+  var workflowName2 = 'Surat masuk - ' + today;
+
+  var emptyWorkflow2 = new elo.model.Task({
+    data: {
+      objId: objectId2,
+      flowId: workflowId2,
+      name: workflowName2
+    }
+  });
+
+  //start workflow
+  emptyWorkflow2.startWorkflow(function(){
+    //search the task and select
+    var ixConn2 = api.Webclient.getIXConnection();
+    //get the specific task
+    var taskInfo2 = new de.elo.ix.client.FindTasksInfo();
+    taskInfo2.objId = objectId;
+    taskInfo2.inclWorkflows = true;
+    taskInfo2.lowestPriority = 2;
+    taskInfo2.highestPriority = 0;
+    taskInfo2.inclGroup = true;
+    taskInfo2.inclDeputy = true;
+    ixConn2.ix().findFirstTasks(taskInfo2, new de.elo.ix.client.AsyncCallback(function(res2){
+      ixConn2.ix().findClose(res2.searchId, new de.elo.ix.client.AsyncCallback(function(){
+      }, function(){
+      }));
+      if(res2 && res2.tasks && res2.tasks.length > 0){
+        //stop search
+        var task2 = res2.tasks[0];
+        if(task2){
+          //make goto object
+          var taskObject2 = {};
+          if(task2.wfNode){
+            taskObject2.nodeId = task2.wfNode.nodeId;
+            taskObject2.flowId = task2.wfNode.flowId;
+          }
+          //trigger goto
+          api.Webclient.gotoTask(taskObject2);
+        }
+      }
+    }, function(){api.Webclient.displayMessage('gagal','gagal');
+    })); //failed callback
+
+    //logging purposes
+    console.log('ObjId: ' + objectId2
+              + '\nWorkflow Name: ' + workflowName2
+              + '\nWorkflow Template ID: ' + workflowId2);
+  });
+
+  //display message box
+  var title2 = 'Create Folder with Workflow Surat Masuk'; //top title
+  var text2 = 'Create Folder and Workflow Surat Masuk Succeded! Please reload the repository or browser if needed.'; //body text
+  api.Webclient.displayMessage(title2, text2);
+};
+
+//create button
+custom.buttonPefindoWeb.FolderWorkflowSuratKeluarButton = new api.Button({
+  name:'BTN_FLDRWRKFLWKELUAR',
+  //handler (the button main function)
+  handler: custom.buttonPefindoWeb.CreateFolderWorkflowSuratKeluarFunction,
+  access: function(state){
+    return state; //button is active on everything
+  },
+  text: 'Create Folder with Workflow Surat Keluar',
+  splitText: 'Create Folder<br/>with Workflow<br/>Surat Keluar',
+  //use png file for icons
+  bigIconCls: 'EmailLogo', //big icon placeholder, change it to any png image
+  smallIconCls: 'EmailLogo', //small icon placeholder, change it to any png image
+  tooltipText: '<br/><p>Creates a Folder with Workflow attached.</p>',
+  tooltipTitle: 'Folder with Workflow Button'
+});
+
+//create button 2
+custom.buttonPefindoWeb.FolderWorkflowSuratMasukButton = new api.Button({
+  name:'BTN_FLDRWRKFLWMASUK',
+  //handler (the button main function)
+  handler: custom.buttonPefindoWeb.CreateFolderWorkflowSuratMasukFunction,
+  access: function(state2){
+    return state2; //button is active on everything
+  },
+  text: 'Create Folder with Workflow Surat Masuk',
+  splitText: 'Create Folder<br/>with Workflow<br/>Surat Masuk',
+  //use png file for icons
+  bigIconCls: 'EmailLogo', //big icon placeholder, change it to any png image
+  smallIconCls: 'EmailLogo', //small icon placeholder, change it to any png image
+  tooltipText: '<br/><p>Creates a Folder with Workflow attached.</p>',
+  tooltipTitle: 'Folder with Workflow Button'
+});
+
+//create new button group for the button
+custom.buttonPefindoWeb.ShowGroup = new api.ButtonGroup({
+  name: 'GRP_PEFINDOBUTTON',
+  text: 'PEFINDO',
+  mode: 'big', //use small or big icon
+  buttons:  [
+    'BTN_FLDRWRKFLWKELUAR',
+    'BTN_FLDRWRKFLWMASUK'
+  ]
+});
+
+//create new ribbon group for the button group
+custom.buttonPefindoWeb.ShowTab = new api.RibbonTab({
+  name: 'TAB_PEFINDOBUTTON',
+  text: 'PEFINDO',
+  groups: [
+    'GRP_PEFINDOBUTTON'
+  ]
+});
+
+//register the button, group, and ribbon to a ribbon bar above
+api.Registry.addRibbonTab('TAB_PEFINDOBUTTON', 10000);
